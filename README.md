@@ -47,7 +47,7 @@ Open http://localhost:3000
 | `app/page.tsx` | Public landing page |
 | `app/auth/swiggy/callback/route.ts` | OAuth redirect handler stub |
 
-Phase 1 (5-day MVP build, after MCP access is granted):
+Phase 1 (after MCP access is granted):
 
 - Swiggy MCP client (Instamart + Food)
 - Postgres via Supabase for user profiles and per-SKU consumption state
