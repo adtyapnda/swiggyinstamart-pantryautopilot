@@ -1,5 +1,7 @@
 # Pantry Autopilot
 
+> Being built for **Swiggy Builders Club 2026**.
+
 A WhatsApp agent that models household grocery consumption passively and sends
 one-tap reorder carts for Swiggy Instamart before users run out. Built on the
 Swiggy MCP stack for Builders Club.
@@ -16,18 +18,18 @@ npm install
 netlify deploy --prod --build
 ```
 
-Netlify auto-detects Next.js and provisions a `*.netlify.app` subdomain.
+Live at https://swiggyinstamart-pantryautopilot.netlify.app.
 
-The deployed URL serves:
+Routes:
 
-- `/` — public landing page
-- `/auth/swiggy/callback` — OAuth redirect handler stub (returns a 400 with
-  `missing_code` when visited without parameters, as expected)
+- `/` is the public landing page
+- `/auth/swiggy/callback` is the OAuth redirect handler stub (returns a 400
+  with `missing_code` when visited without parameters, as expected)
 
-Redirect URIs to register with Swiggy Builders Club:
+Redirect URIs registered with Swiggy Builders Club:
 
 ```
-https://<your-site>.netlify.app/auth/swiggy/callback
+https://swiggyinstamart-pantryautopilot.netlify.app/auth/swiggy/callback
 http://localhost:3000/auth/swiggy/callback
 ```
 
