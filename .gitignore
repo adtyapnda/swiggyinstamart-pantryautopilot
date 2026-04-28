@@ -9,3 +9,9 @@ out
 
 # Local Netlify folder
 .netlify
+
+# TypeScript incremental build cache
+*.tsbuildinfo
+
+# Claude Code session state
+.claude/
