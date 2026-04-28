@@ -23,8 +23,25 @@ Live at https://swiggyinstamart-pantryautopilot.netlify.app.
 Routes:
 
 - `/` is the public landing page
-- `/auth/swiggy/callback` is the OAuth redirect handler stub (returns a 400
-  with `missing_code` when visited without parameters, as expected)
+- `/auth/swiggy/start` initiates the OAuth handshake (generates PKCE
+  verifier + state, redirects to the authorize endpoint)
+- `/auth/swiggy/callback` exchanges the authorization code for an access
+  token and stores it
+- `/mock/authorize` and `/mock/token` are local mock OAuth endpoints used
+  in dev so the full handshake runs end-to-end without a real `client_id`
+- `/dev/mcp-ping` exercises the MCP client wrapper. Append `?fake=1` (or
+  set `MCP_USE_FAKE=1`) to use the in-memory `FakeMCPClient` until real
+  MCP access lands.
+- `/dev/cadence` runs the Bayesian cadence model against synthetic
+  Instamart + Food order histories and returns per-SKU predictions plus
+  self-assertions. Tune via `?seed=`, `?historyDays=`, `?foodOrdersPerWeek=`.
+- `/whatsapp/webhook` is the Meta webhook (GET verify handshake + POST
+  message events). Set `WHATSAPP_VERIFY_TOKEN` to match the value pasted
+  into the Meta dashboard.
+- `/dev/whatsapp-send?to=<phone>&text=<msg>` exercises the outbound
+  helper. Append `&mode=buttons` to send an interactive 3-button card
+  ("Reorder" / "Already got it" / "Skip"). With `WHATSAPP_USE_MOCK=1` it
+  logs to the function output instead of calling Meta.
 
 Redirect URIs registered with Swiggy Builders Club:
 
@@ -35,19 +52,46 @@ http://localhost:3000/auth/swiggy/callback
 
 ## Run locally
 
+Copy the example env file (defaults point at the local mock OAuth endpoints,
+so no Swiggy credentials are needed to exercise the handshake):
+
 ```bash
-npm install
-npm run dev
+cp .env.example .env
 ```
 
-Open http://localhost:3000
+Run with `netlify dev` so the static site and Netlify Functions are served
+together on the same origin:
+
+```bash
+npm install
+netlify dev
+```
+
+Open http://localhost:3000. To exercise the OAuth handshake end-to-end
+against the mock endpoints, visit
+http://localhost:3000/auth/swiggy/start.
 
 ## What's here / what's coming
 
 | File | Purpose |
 |---|---|
 | `app/page.tsx` | Public landing page |
-| `app/auth/swiggy/callback/route.ts` | OAuth redirect handler stub |
+| `netlify/functions/swiggy-start.mts` | Generates PKCE verifier + state, redirects to authorize |
+| `netlify/functions/swiggy-callback.mts` | Exchanges the authorization code for an access token |
+| `netlify/functions/mock-authorize.mts` | Local mock authorize endpoint (dev only) |
+| `netlify/functions/mock-token.mts` | Local mock token endpoint, validates PKCE (dev only) |
+| `netlify/functions/dev-mcp-ping.mts` | Dev endpoint that exercises the MCP client end-to-end |
+| `netlify/functions/dev-cadence.mts` | Dev endpoint that runs the cadence model on synthetic data with self-assertions |
+| `netlify/functions/whatsapp-webhook.mts` | Meta webhook — verify handshake + inbound message events |
+| `netlify/functions/dev-whatsapp-send.mts` | Dev endpoint for testing outbound send (text or interactive buttons) |
+| `netlify/lib/oauth.ts` | PKCE helpers — verifier, challenge, state |
+| `netlify/lib/storage.ts` | Netlify Blobs wrapper for OAuth sessions and tokens |
+| `netlify/lib/mcp/` | MCP client wrapper (real + fake) over `@modelcontextprotocol/sdk` |
+| `netlify/lib/cadence/` | Bayesian cadence model (Exp-Gamma conjugate) + synthetic data generator |
+| `netlify/lib/whatsapp/` | WhatsApp Business Cloud API helpers — types, parser, send (real + mock) |
+| `netlify/lib/db/` | Supabase client + AES-256-GCM token encryption |
+| `migrations/001_init.sql` | Initial Postgres schema for users, oauth_tokens, tracked_skus, consumption_events, nudges_sent |
+| `scripts/smoke.ts` | Pure-Node smoke test for cadence + FakeMCPClient (`npm run smoke`) |
 
 Phase 1 (after MCP access is granted):
 
